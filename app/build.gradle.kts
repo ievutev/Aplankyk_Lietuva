@@ -31,8 +31,6 @@ android {
         buildConfigField("String", "weatherApiKey", "\"${localProperties.getProperty("weatherApiKey")}\"")
     }
 
-
-
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -61,13 +59,16 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.maps.android:android-maps-utils:2.2.2")
     implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
-    implementation("com.google.firebase:firebase-firestore:23.0.3")
-    implementation("com.google.firebase:firebase-auth:20.0.3")
+    implementation ("com.google.firebase:firebase-analytics:22.0.0")
+    implementation("com.google.firebase:firebase-firestore:25.0.0")
+    implementation("com.google.firebase:firebase-auth:23.0.0")
     implementation("com.google.android.gms:play-services-auth:19.2.0")
-    implementation("com.google.firebase:firebase-storage:20.0.0")
+    implementation("com.google.firebase:firebase-storage:21.0.0")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.9")
     testImplementation("org.mockito:mockito-core:4.0.0")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }
+
+apply(plugin = "com.google.gms.google-services")
