@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F6F6EB">
+
+    <include
+        android:id="@+id/include2"
+        layout="@layout/pageinfo_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true" />
+
+    <LinearLayout
+        android:id="@+id/buttonLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="40dp"
+        android:layout_below="@id/include2">
+
+        <Button
+            android:id="@+id/aboutApp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Apie programėlę ir kūrėją" />
+
+        <Button
+            android:id="@+id/howToUse"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Kaip naudotis?" />
+
+        <Button
+            android:id="@+id/logOut"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Atsijungti" />
+
+        <Button
+            android:id="@+id/deleteButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Šalinti paskyrą" />
+
+    </LinearLayout>
+
+    <include
+        android:id="@+id/include"
+        layout="@layout/navigation_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" />
+
+</RelativeLayout>

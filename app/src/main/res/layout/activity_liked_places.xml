@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F6F6EB">
+
+    <!-- Top bar -->
+    <include
+        android:id="@+id/include4"
+        layout="@layout/pageinfo_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- Planner navigation -->
+    <include
+        android:id="@+id/include3"
+        layout="@layout/planner_nav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="67dp"/>
+
+    <!-- RecyclerView for liked places -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/include4"
+        android:layout_marginBottom="117dp"
+        android:padding="8dp" />
+
+    <!-- Bottom navigation -->
+    <TextView
+        android:id="@+id/noEntriesTextView"
+        android:layout_width="match_parent"
+        android:layout_height="31dp"
+        android:text="Įrašų nėra"
+        android:visibility="invisible"
+        android:textAlignment="center"
+        android:textSize="50px"
+        android:textColor="@color/black"
+        android:layout_marginTop="200px"/>
+
+    <include
+        android:id="@+id/include5"
+        layout="@layout/navigation_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"/>
+
+</RelativeLayout>
+
+

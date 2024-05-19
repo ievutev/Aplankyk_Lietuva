@@ -1,0 +1,81 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/dialog_background">
+
+    <!-- Custom title -->
+    <TextView
+        android:id="@+id/dialogTitleTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Pridėti albumą ir nuotraukas"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:gravity="center"
+        android:paddingBottom="16dp" />
+
+    <!-- EditText for album title -->
+    <EditText
+        android:id="@+id/albumTitleEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Albumo pavadinimas"
+        android:inputType="text"
+        android:textColor="@color/black"
+        android:textColorHint="#8A8A8A"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Button to select or capture photo -->
+    <Button
+        android:id="@+id/addPhotoButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pasirinkti nuotraukas"
+        android:layout_gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <!-- TextView to display message when images are selected -->
+    <TextView
+        android:id="@+id/photoSelectedTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nepasirinktos nuotraukos"
+        android:textColor="#8A8A8A"
+        android:layout_gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Buttons for cancel and save actions -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/cancelButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Atšaukti"
+            android:textColor="@color/black"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginBottom="16dp" />
+
+        <Button
+            android:id="@+id/saveButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Išsaugoti"
+            android:textColor="@color/black"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="16dp" />
+
+    </LinearLayout>
+
+</LinearLayout>
