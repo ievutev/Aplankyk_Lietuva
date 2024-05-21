@@ -11,8 +11,8 @@ public class Place implements ClusterItem {
     private double latitude;
     private double longitude;
 
+    // Constructor without arguments for Firebase declaration
     public Place() {
-        // No-argument constructor required for Firebase deserialization
     }
 
     public Place(double latitude, double longitude, String title) {
@@ -30,6 +30,7 @@ public class Place implements ClusterItem {
         return longitude;
     }
 
+    // Method to get place coordinates
     @NonNull
     @Override
     public LatLng getPosition() {

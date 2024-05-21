@@ -80,8 +80,6 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
     private ProgressBar loadingProgressBar;
     private RecyclerView recyclerView;
     private ListAdapter adapter;
-    Place place;
-
     private static final int REQUEST_CHECK_SETTINGS = 1001;
 
     @Override
@@ -102,20 +100,18 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
 
         // Check network connectivity
         if (!isNetworkConnected()) {
-            Toast.makeText(this, "No internet connection.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Nėra interneto ryšio", Toast.LENGTH_SHORT).show();
             loadingProgressBar.setVisibility(View.INVISIBLE);
-            return;
         }
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        // Initialize location request
+        // Requesting location
         locationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval(2000)
                 .setNumUpdates(2);
 
-        // Initialize location callback
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
@@ -123,27 +119,20 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
                     return;
                 }
                 for (Location location : locationResult.getLocations()) {
-                    // Handle location updates
                     updateLocation(location, tempText, weatherIcon);
                     try {
                         fetchNearbyPlacesFromApi(location.getLatitude(), location.getLongitude());
                     } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace(); // or handle the exception as needed
+                        e.printStackTrace();
                     }
                 }
             }
         };
-        // Request location updates
         startLocationUpdates();
 
-        // Initialize RecyclerView
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-
-
-
-        // Set click listeners
         mapButton.setOnClickListener(v -> startActivity(new Intent(MainPage.this, PlanTripMap.class)));
         photoButton.setOnClickListener(v -> startActivity(new Intent(MainPage.this, PhotoAlbum.class)));
         settingsButton.setOnClickListener(v -> startActivity(new Intent(MainPage.this, Settings.class)));
@@ -176,16 +165,14 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
         fusedLocationClient.removeLocationUpdates(locationCallback);
     }
 
-    // Handle location permission request result
+    // Checking if location request was successful
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == location_permission) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, check location settings
                 checkLocationSettings();
             } else {
-                // Permission denied, handle accordingly
                 Toast.makeText(this, "Nesuteikta vietovės prieiga", Toast.LENGTH_SHORT).show();
                 loadingProgressBar.setVisibility(View.INVISIBLE);
             }
@@ -194,7 +181,6 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
 
     // Method to update location
     private void updateLocation(Location location, TextView tempText, ImageView weatherIcon) {
-        // Handle the received location
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
         try {
             List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
@@ -202,10 +188,8 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
                 String city = addresses.get(0).getLocality();
                 cityText.setText(city);
 
-                // Construct weather API URL with city name
                 String weatherApi_link = getWeatherApiLink(city);
 
-                // Fetch weather data
                 fetchWeatherData(weatherApi_link, tempText, weatherIcon);
             }
         } catch (IOException e) {
@@ -226,39 +210,33 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
         StringRequest stringRequest = new StringRequest(Request.Method.GET, weatherApiLink, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                // Handle the successful response
                 try {
                     JSONObject jsonResponse = new JSONObject(response);
 
-                    // Get temperature
+                    // Getting temperature
                     JSONObject mainObject = jsonResponse.getJSONObject("main");
                     double temperature = mainObject.getDouble("temp");
 
-                    // Get weather icon
+                    // Getting weather icon
                     JSONArray weatherArray = jsonResponse.getJSONArray("weather");
                     JSONObject weatherObject = weatherArray.getJSONObject(0);
                     String iconCode = weatherObject.getString("icon");
 
-                    // Construct the URL for the weather icon
                     String iconUrl = "https://openweathermap.org/img/wn/" + iconCode + "@2x.png";
 
                     // Load the weather icon into the ImageView using Picasso
                     Picasso.get().load(iconUrl).into(weatherIcon, new com.squareup.picasso.Callback() {
                         @Override
                         public void onSuccess() {
-                            // Image loaded successfully
                             loadingProgressBar.setVisibility(View.INVISIBLE);
                         }
 
                         @Override
                         public void onError(Exception e) {
-                            // Failed to load image
                             loadingProgressBar.setVisibility(View.INVISIBLE);
-                            e.printStackTrace();
                         }
                     });
 
-                    // Display temperature
                     String temperatureString = df.format(temperature) + " °C";
                     tempText.setText(temperatureString);
                     loadingProgressBar.setVisibility(View.INVISIBLE);
@@ -270,31 +248,27 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                // Handle errors
-                Toast.makeText(MainPage.this, "Failed to fetch weather data: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainPage.this, "Kažkas nutiko ne taip. Bandyk dar kartą", Toast.LENGTH_SHORT).show();
                 loadingProgressBar.setVisibility(View.INVISIBLE);
             }
         });
 
-        // Add the request to the request queue
         RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
         requestQueue.add(stringRequest);
     }
 
-
-
     // Method to check location settings
     private void checkLocationSettings() {
-        // Check for location permission
+        // Checking for location permission
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // Permission not granted, request it
+            // Permission not granted, requesting
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     location_permission);
             return;
         }
 
-        // Location permission granted, proceed with location settings check
+        // Location permission granted, proceeding with location settings check
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
                 .addLocationRequest(locationRequest);
         SettingsClient client = LocationServices.getSettingsClient(this);
@@ -303,7 +277,6 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
         task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
             @Override
             public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-                // All location settings are satisfied. Start location updates
                 fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null);
             }
         });
@@ -312,13 +285,10 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
             @Override
             public void onFailure(@NonNull Exception e) {
                 if (e instanceof ResolvableApiException) {
-                    // Location settings are not satisfied, but this can be fixed by showing the user a dialog
                     try {
-                        // Show the dialog by calling startResolutionForResult(), and check the result in onActivityResult()
                         ResolvableApiException resolvable = (ResolvableApiException) e;
                         resolvable.startResolutionForResult(MainPage.this, REQUEST_CHECK_SETTINGS);
                     } catch (IntentSender.SendIntentException sendEx) {
-                        // Ignore the error
                     }
                 }
             }
@@ -331,17 +301,15 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CHECK_SETTINGS) {
             if (resultCode == RESULT_OK) {
-                // User enabled location, start location updates
                 fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null);
             } else {
-                // User canceled or didn't enable location, handle accordingly
-                Toast.makeText(this, "Location services are required for this app to function properly.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Reikalinga vietovės prieiga", Toast.LENGTH_SHORT).show();
                 loadingProgressBar.setVisibility(View.INVISIBLE);
             }
         }
     }
 
-
+    // Method for systems "back" button pressed
     @Override
     public void onBackPressed() {
         new AlertDialog.Builder(this)
@@ -363,12 +331,14 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
                 .show();
     }
 
+    // Checking if network is connected
     private boolean isNetworkConnected() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 
+    // Method to handle "direction" button click
     @Override
     public void onDirectionClick(String placeName) {
         String uri = "https://www.google.com/maps/dir/?api=1&destination=" + placeName;
@@ -377,6 +347,7 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
         startActivity(intent);
     }
 
+    // Method to handle "about" button click
     @Override
     public void onAboutObjectClick(String placeName) {
         Intent intent = new Intent(MainPage.this, SearchResultWebActivity.class);
@@ -384,19 +355,19 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
         startActivity(intent);
     }
 
+    // Method to handle "add to list" button click
     public void onAddToListClick(Place place) {
         savePlaceToFirestore(place);
     }
 
+    // Method to fetch nearby places using api
     private void fetchNearbyPlacesFromApi(double latitude, double longitude) throws UnsupportedEncodingException {
-        // Construct the URL for the OpenStreetMap API request to fetch nearby places
         String overpassQuery = "node['tourism'](around:15000," + latitude + "," + longitude + ");" +
                 "way['tourism'](around:15000," + latitude + "," + longitude + ");" +
                 "relation['tourism'](around:15000," + latitude + "," + longitude;
         String encodedQuery = URLEncoder.encode(overpassQuery, "UTF-8");
         String apiUrl = "https://overpass-api.de/api/interpreter?data=[out:json];" + encodedQuery + ");out;";
 
-        // Initialize a new RequestQueue instance
         RequestQueue queue = Volley.newRequestQueue(this);
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, apiUrl, null,
@@ -404,7 +375,6 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
-                            // Parse the JSON response
                             JSONArray elements = response.getJSONArray("elements");
                             List<Place> nearbyPlaces = new ArrayList<>();
 
@@ -418,8 +388,8 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
                                     latitude = placeObject.getDouble("lat");
                                     longitude = placeObject.getDouble("lon");
                                 } else {
-                                    latitude = 0; // Default latitude
-                                    longitude = 0; // Default longitude
+                                    latitude = 0;
+                                    longitude = 0;
                                 }
 
                                 Place place = new Place(latitude, longitude, placeName); // Declare place locally
@@ -429,7 +399,6 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
 
                             }
 
-                            // Save nearby places to Firestore and display them
                             saveNearbyPlacesToFirestore(nearbyPlaces);
 
                         } catch (JSONException e) {
@@ -440,15 +409,14 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        // Handle errors
                         error.printStackTrace();
                     }
                 });
 
-        // Add the request to the RequestQueue
         queue.add(jsonObjectRequest);
     }
 
+    // Method to save place info to database
     private void savePlaceToFirestore(Place place) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -463,73 +431,55 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
                 });
     }
 
+    // Method to store nearby places to database
     private void saveNearbyPlacesToFirestore(List<Place> nearbyPlaces) {
-        // Assuming you have initialized your Firestore instance
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        // Get the current user ID
         String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        // Reference to the user document in Firestore
         DocumentReference userRef = db.collection("Users").document(userId);
 
-        // Use a transaction to delete existing personalizedData and add new data
         db.runTransaction(transaction -> {
-                    // Get the current data
                     DocumentSnapshot snapshot = transaction.get(userRef);
 
-                    // Check if personalizedData field exists
                     if (snapshot.contains("personalizedData")) {
-                        // Delete the personalizedData field
                         transaction.update(userRef, "personalizedData", FieldValue.delete());
                     }
 
-                    // Add new data
                     transaction.update(userRef, "personalizedData", nearbyPlaces);
 
-                    // Return the new data for this transaction
                     return nearbyPlaces;
                 })
                 .addOnSuccessListener(result -> {
-                    // Handle success if needed
                 })
                 .addOnFailureListener(e -> {
-                    // Handle failure if needed
                 });
 
         displayNearbyPlaces();
     }
 
-
+    // Method to display nearby places in the app
     private void displayNearbyPlaces() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid(); // Get current user ID
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         db.collection("Users").document(userId).get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        // Retrieve personalized data from Firestore document
                         User user = documentSnapshot.toObject(User.class);
                         if (user != null) {
                             List<Place> personalizedData = user.getPersonalizedData();
                             if (personalizedData != null) {
-                                // Create and set adapter with personalized data
                                 adapter = new ListAdapter(this, personalizedData, false);
                                 recyclerView.setAdapter(adapter);
                                 adapter.setOnDirectionClickListener(this);
                                 adapter.setOnAboutObjectClickListener(this);
                                 adapter.setOnAddToListClickListener(this);
-                            } else {
-                                Log.d(TAG, "Personalized data is null");
                             }
-                        } else {
-                            Log.d(TAG, "User object is null");
                         }
-                    } else {
-                        Log.d(TAG, "No such document");
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error getting personalized data", e);
+                    Toast.makeText(MainPage.this, "Kažkas nutiko ne taip. Bandyk dar kartą", Toast.LENGTH_SHORT).show();
                 });
     }
 

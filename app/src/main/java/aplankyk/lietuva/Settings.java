@@ -89,7 +89,6 @@ public class Settings extends AppCompatActivity {
                 builder.setPositiveButton("Ištrinti", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        // Proceed with account deletion
                         deleteUserAccount();
                         deleteUserDataFromFirestore();
                     }
@@ -128,30 +127,26 @@ public class Settings extends AppCompatActivity {
         });
     }
 
+    // Method to show the dialog window with about info
     private void showAboutDialog() {
-        // Create an AlertDialog Builder
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        // Set the title and message
         builder.setTitle("Apie programėlę ir kūrėją");
         builder.setMessage("Mobilioji programėlė „Aplankyk Lietuvą“ yra skirta visiems, kurie nori keliauti po Lietuvą ir aplankyti kuo daugiau lankytinų vietų Lietuvoje. Naudotojai, naudodamiesi šia mobiliąja programėle gali ieškoti lankytinų vietų paieškoje ar žemėlapyje. Taip pat, yra galimybė pasirinkti vieną iš trijų atsitiktinių kortelių, kuriose yra užrašytos skirtingos ir atsitiktinės lankytinos vietos Lietuvoje. Naudotojas gali sukurti skaitmeninį nuotraukų albumą, kuriame yra galimybė saugoti kelionių metu įamžintas akimirkas.");
 
-        // Set a button to close the dialog
         builder.setPositiveButton("Uždaryti", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss(); // Dismiss the dialog
+                dialog.dismiss();
             }
         });
 
-        // Create and show the AlertDialog
         AlertDialog dialog = builder.create();
         dialog.show();
     }
 
+    // Method to show the dialog window with how to use info
     private void showHowToUseDialog() {
-        // Create an AlertDialog Builder
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        // Set the title and message
         builder.setTitle("Kaip naudotis?");
         builder.setMessage("Prisijungimo/paskyros kūrimo lange pateikiamas mobiliosios programėlės logotipas, mygtukas skirtas prisijungimui/paskyros kūrimui ir pateikiami kūrimo metai.  Naudotojui paspaudus mygtuką [Prisijunkite naudodami „Google“]  išvedamas modalinis langas su „Google“ paskyros pasirinkimu. Kai naudotojas pasirenka paskyrą, su kuria nori prisijungti, sistema patikrina, ar yra registruotas vartotojas su pasirinktos paskyros duomenimis, jei nėra – išvedamas informacinis pranešimas „Vartotojas nerastas. Ar norite sukurti paskyrą?“. \n" +
                 "Jei vartotojas randamas – iškart nukreipiamas į pagrindinį mobiliosios programėlės langą.\n" +
@@ -169,47 +164,37 @@ public class Settings extends AppCompatActivity {
                 "• Paspausti mygtuką [Atsijungti] ir tęsti arba atšaukti atsijungimo procesą. Sėkmingai atsijungęs naudotojas nukreipiamas į pagrindinį langą.\n" +
                 "• Paspausti mygtuką [Šalinti paskyrą] ir tęsti arba atšaukti paskyros šalinimo procesą. Sėkmingai pašalinus paskyrą – naudotojas nukreipiamas į pagrindinį langą.");
 
-        // Set a button to close the dialog
         builder.setPositiveButton("Uždaryti", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss(); // Dismiss the dialog
+                dialog.dismiss();
             }
         });
-
-        // Create and show the AlertDialog
         AlertDialog dialog = builder.create();
         dialog.show();
     }
 
+    // Method to delete user account
     private void deleteUserAccount() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
-            // Get the user's ID
             String userId = user.getUid();
 
-            // Get a reference to the user's directory in Firebase Storage
             FirebaseStorage storage = FirebaseStorage.getInstance();
             StorageReference userRef = storage.getReference().child("users/" + userId);
 
-            // List all items (albums) in the user's directory
             userRef.listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
                 @Override
                 public void onSuccess(ListResult listResult) {
-                    // Iterate through each album directory
                     for (StorageReference albumRef : listResult.getPrefixes()) {
-                        // List all items (photos) in the album directory
                         albumRef.listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
                             @Override
                             public void onSuccess(ListResult listResult) {
-                                // Iterate through each photo in the album directory
                                 for (StorageReference photoRef : listResult.getItems()) {
-                                    // Delete the photo
                                     photoRef.delete().addOnFailureListener(new OnFailureListener() {
                                         @Override
                                         public void onFailure(@NonNull Exception e) {
-                                            // Handle photo deletion failure
-                                            Toast.makeText(Settings.this, "Failed to delete photo: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(Settings.this, "Kažkas nutiko ne taip", Toast.LENGTH_SHORT).show();
                                         }
                                     });
                                 }
@@ -217,8 +202,7 @@ public class Settings extends AppCompatActivity {
                         }).addOnFailureListener(new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                // Handle listing photos failure
-                                Toast.makeText(Settings.this, "Failed to list photos: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(Settings.this, "Kažkas nutiko ne taip", Toast.LENGTH_SHORT).show();
                             }
                         });
                     }
@@ -226,38 +210,29 @@ public class Settings extends AppCompatActivity {
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    // Handle listing albums failure
-                    Toast.makeText(Settings.this, "Failed to list albums: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(Settings.this, "Kažkas nutiko ne taip", Toast.LENGTH_SHORT).show();
                 }
             });
 
-            // Proceed with deleting the user account from Firebase Authentication
             user.delete().addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
                     if (task.isSuccessful()) {
-                        // User account deleted successfully
-                        // Redirect to login screen
                         Intent intent = new Intent(Settings.this, LogIn.class);
                         startActivity(intent);
                     } else {
-                        // Handle account deletion failure
-                        //Toast.makeText(Settings.this, "Failed to delete account: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(Settings.this, LogIn.class);
                         startActivity(intent);
                     }
                 }
             });
         } else {
-            // User is already logged out or doesn't exist
-            // Redirect to login screen
             Intent intent = new Intent(Settings.this, LogIn.class);
             startActivity(intent);
         }
     }
 
-
-
+    // Method to delete user data from firestore
     private void deleteUserDataFromFirestore() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -274,13 +249,13 @@ public class Settings extends AppCompatActivity {
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            // Handle Firestore deletion failure
-                            Toast.makeText(Settings.this, "Failed to delete user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(Settings.this, "Kažkas nutiko ne taip", Toast.LENGTH_SHORT).show();
                         }
                     });
         }
     }
 
+    // Method to handle systems "back" button
     @Override
     public void onBackPressed() {
         new AlertDialog.Builder(this)

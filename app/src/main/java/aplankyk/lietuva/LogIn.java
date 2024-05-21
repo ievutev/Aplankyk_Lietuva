@@ -58,6 +58,7 @@ public class LogIn extends AppCompatActivity {
         });
     }
 
+    // Method to handle system "back" button press
     @Override
     public void onBackPressed() {
         new AlertDialog.Builder(this)
@@ -79,6 +80,7 @@ public class LogIn extends AppCompatActivity {
                 .show();
     }
 
+    // This method checks if user is already registered
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -108,31 +110,25 @@ public class LogIn extends AppCompatActivity {
                                                 builder.setPositiveButton("Taip", new DialogInterface.OnClickListener() {
                                                     @Override
                                                     public void onClick(DialogInterface dialog, int which) {
-                                                        // Create a new User object and store it in Firestore
-                                                        User newUser = new User(userID); // Create a new User object with the UID
+                                                        // New User is created and stored in database
+                                                        User newUser = new User(userID);
                                                         db.collection("Users").document(userID)
-                                                                .set(newUser) // Store the User object in Firestore
+                                                                .set(newUser)
                                                                 .addOnSuccessListener(aVoid -> {
-                                                                    // User data successfully stored in Firestore
-                                                                    Log.d(TAG, "User data stored in Firestore.");
+                                                                    Toast.makeText(LogIn.this, "Naudotojas sėkmingai sukurtas", Toast.LENGTH_SHORT).show();
                                                                 })
                                                                 .addOnFailureListener(e -> {
-                                                                    // Handle errors
-                                                                    Log.e(TAG, "Error storing user data in Firestore: " + e.getMessage());
-                                                                    Toast.makeText(LogIn.this, "Error storing user data in Firestore", Toast.LENGTH_SHORT).show();
+                                                                    Toast.makeText(LogIn.this, "Kažkas nutiko ne taip. Bandyk dar kartą", Toast.LENGTH_SHORT).show();
                                                                 });
                                                         startActivity(new Intent(LogIn.this, MainPage.class));
                                                     }
                                                 });
-                                                // Rest of the AlertDialog code...
                                                 builder.setNegativeButton("Ne", new DialogInterface.OnClickListener() {
                                                     @Override
                                                     public void onClick(DialogInterface dialog, int which) {
-                                                        // User selected NO, sign out from Firebase Authentication
                                                         FirebaseAuth.getInstance().signOut();
                                                         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                                                         if (user != null) {
-                                                            // Delete user account from Firebase Authentication
                                                             user.delete()
                                                                     .addOnCompleteListener(new OnCompleteListener<Void>() {
                                                                         @Override
@@ -140,9 +136,6 @@ public class LogIn extends AppCompatActivity {
                                                                             if (task.isSuccessful()) {
                                                                                 Intent intent = new Intent(LogIn.this, LogIn.class);
                                                                                 startActivity(intent);
-                                                                            } else {
-                                                                                // Handle account deletion failure
-                                                                                Toast.makeText(LogIn.this, "Failed to delete account: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                                                                             }
                                                                         }
                                                                     });
@@ -153,12 +146,11 @@ public class LogIn extends AppCompatActivity {
                                                 AlertDialog alertDialog = builder.create();
                                                 alertDialog.show();
                                             } else {
-                                                // User already exists, proceed to main activity
                                                 startActivity(new Intent(LogIn.this, MainPage.class));
                                                 finish();
                                             }
                                         } else {
-                                            Log.d(TAG, "Failed with: ", task.getException());
+                                            Toast.makeText(LogIn.this, "Kažkas nutiko ne taip. Bandyk dar kartą", Toast.LENGTH_SHORT).show();
                                         }
                                     }
                                 });
@@ -180,7 +172,7 @@ public class LogIn extends AppCompatActivity {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             startActivity(new Intent(this, MainPage.class));
-            finish(); // Finish the activity to prevent going back to it when pressing back button from MainPage
+            finish();
         }
     }
 }

@@ -59,8 +59,6 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
     private Place place;
     View overlay;
 
-    private static final String CACHED_PLACES_JSON_KEY = "cached_places_json";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,7 +66,7 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
         ImageView mapButton = findViewById(R.id.map);
         mapButton.setBackgroundColor(Color.parseColor("#F6F6EB"));
 
-        mapView = findViewById(R.id.mapView); // Initialize mapView here
+        mapView = findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
 
@@ -76,6 +74,7 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
         setupListeners();
     }
 
+    // Method for initializing views
     private void initializeViews() {
         TextView pageName = findViewById(R.id.pagename);
         pageName.setText("Planuoti kelionę");
@@ -90,6 +89,7 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
         mapView = findViewById(R.id.mapView);
     }
 
+    // Method for setting up the listeners for buttons
     private void setupListeners() {
         ImageView searchButton = findViewById(R.id.search);
         ImageView cardsButton = findViewById(R.id.card);
@@ -139,6 +139,7 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
         });
     }
 
+    // Method with actions to do, when map is ready
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         this.googleMap = googleMap;
@@ -150,13 +151,11 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
         LatLng location = new LatLng(55.1694, 23.8813);
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 7));
 
-        // Display toast message indicating data loading
         Toast.makeText(PlanTripMap.this, "Žemėlapio duomenys kraunami. Tai gali užtrukti.", Toast.LENGTH_SHORT).show();
 
-        // Delay execution of fetchDataFromOpenStreetMapAPI() using a Handler
         new Handler().postDelayed(() -> {
             new FetchPlacesTask(this).execute();
-        }, 10); // Adjust delay time as needed
+        }, 10);
     }
 
     private static class FetchPlacesTask extends AsyncTask<Void, Void, String> {
@@ -180,12 +179,12 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
             if (placesJson != null) {
                 activity.processPlacesJson(placesJson);
             } else {
-                // Handle null or empty JSON response
-                Toast.makeText(activity, "Failed to fetch data from OpenStreetMap API", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, "Kažkas nutiko ne taip. Bandyk dar kartą", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
+    // Method for getting data from OpenStreetMap API
     private String fetchDataFromOpenStreetMapAPI() {
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
@@ -204,7 +203,6 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
                 return null;
             }
 
-            // Use try-with-resources to automatically close resources
             try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
                 StringBuilder buffer = new StringBuilder();
                 String line;
@@ -226,9 +224,9 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
         return placesJson;
     }
 
+    // Method to save get places info from JSON
     private void processPlacesJson(String placesJson) {
         if (placesJson == null || placesJson.isEmpty()) {
-            // Handle null or empty JSON response
             return;
         }
 
@@ -251,10 +249,11 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
             Toast.makeText(PlanTripMap.this, "Žemėlapio duomenys užkrauti", Toast.LENGTH_SHORT).show();
         } catch (JSONException e) {
             e.printStackTrace();
-            Toast.makeText(PlanTripMap.this, "Failed to process JSON data", Toast.LENGTH_SHORT).show();
+            Toast.makeText(PlanTripMap.this, "Kažkas nutiko ne taip. Bandyk dar kartą", Toast.LENGTH_SHORT).show();
         }
     }
 
+    // Method to create place object from JSON
     private Place createPlaceFromJson(JSONObject placeObject) {
         JSONObject tagsObject = placeObject.optJSONObject("tags");
         String placeName = tagsObject.optString("name");
@@ -267,6 +266,7 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
         return null;
     }
 
+    // Method to add the place to the map
     private void addPlacesToMap(List<Place> places) {
         for (Place place : places) {
             clusterManager.addItem(place);
@@ -274,6 +274,7 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
         clusterManager.cluster();
     }
 
+    // Method to check if the place is within Lithuania
     static boolean isPlaceInLithuania(double longitude, double latitude) {
         return ((longitude > 21.116236 && longitude < 22.754387 && latitude > 55.181514 && latitude < 56.325199) ||
                 (longitude > 22.621825 && longitude < 26.293709 && latitude > 55.131299 && latitude < 56.037815) ||
@@ -281,6 +282,7 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
                 (longitude > 23.512033 && longitude < 24.842267 && latitude > 53.965276 && latitude < 54.752666));
     }
 
+    // Method to handle the click on the marker
     @Override
     public boolean onClusterItemClick(@NonNull Place clickedPlace) {
         String placeName = clickedPlace.getTitle();
@@ -298,6 +300,7 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
         return false;
     }
 
+    // Method for system "back" button press
     @Override
     public void onBackPressed() {
         new AlertDialog.Builder(this)

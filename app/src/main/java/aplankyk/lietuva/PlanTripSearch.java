@@ -147,14 +147,16 @@ public class PlanTripSearch extends AppCompatActivity implements ListAdapter.OnD
         searchResultAdapter.setOnAddToListClickListener(this);
     }
 
+    // Method for button "directions" click
     @Override
     public void onDirectionClick(String placeName) {
         String uri = "https://www.google.com/maps/dir/?api=1&destination=" + placeName;
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
-        intent.setPackage("com.google.android.apps.maps"); // Specify package to ensure Google Maps is used
+        intent.setPackage("com.google.android.apps.maps");
         startActivity(intent);
     }
 
+    // Method for button "about" click
     @Override
     public void onAboutObjectClick(String placeName) {
         Intent intent = new Intent(this, SearchResultWebActivity.class);
@@ -162,6 +164,7 @@ public class PlanTripSearch extends AppCompatActivity implements ListAdapter.OnD
         startActivity(intent);
     }
 
+    // Method for button "add to list" click
     public void onAddToListClick(Place place) {
         // Update Firestore database
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -179,27 +182,25 @@ public class PlanTripSearch extends AppCompatActivity implements ListAdapter.OnD
                         @Override
                         public void onFailure(@NonNull Exception e) {
                             Toast.makeText(PlanTripSearch.this, "Nepavyko pridėti objekto į Jūsų sąrašą", Toast.LENGTH_SHORT).show();
-                            Log.e(TAG, "Kažkas nutiko ne taip...", e);
                         }
                     });
         }
     }
 
+    // Method for button "search" click
     public void onSearchButtonClick(View view) {
         String searchQuery = searchEditText.getText().toString().trim();
-        // Perform search based on the search query
         performSearch(searchQuery);
 
     }
 
+    // Method for searching places by keyword
     private void performSearch(String query) {
-        // Construct the Overpass API query
         double minLat = 53.7;
         double minLon = 20.9;
         double maxLat = 56.4;
         double maxLon = 26.8;
 
-        // Combine multiple categories into a single query
         String overpassQuery = "[out:json];" +
                 "(" +
                 "node[\"name\"~\"" + query + "*\",i][tourism](" + minLat + "," + minLon + "," + maxLat + "," + maxLon + ");" +
@@ -209,10 +210,8 @@ public class PlanTripSearch extends AppCompatActivity implements ListAdapter.OnD
                 "out;";
 
         try {
-            // Encode the query string
             String encodedQuery = URLEncoder.encode(overpassQuery, "UTF-8");
             String apiUrl = "https://overpass-api.de/api/interpreter?data=" + encodedQuery;
-            // Execute the AsyncTask to perform the HTTP request
             new SearchTask().execute(apiUrl);
         } catch (Exception e) {
             e.printStackTrace();
@@ -225,19 +224,14 @@ public class PlanTripSearch extends AppCompatActivity implements ListAdapter.OnD
         protected String doInBackground(String... urls) {
             String response = "";
             try {
-                // Create URL object from the API URL string
                 URL url = new URL(urls[0]);
 
-                // Create HttpURLConnection
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-                // Set request method
                 connection.setRequestMethod("GET");
 
-                // Connect to the API
                 connection.connect();
 
-                // Read input stream into a String
                 InputStream inputStream = connection.getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 String line;
@@ -247,7 +241,6 @@ public class PlanTripSearch extends AppCompatActivity implements ListAdapter.OnD
                 }
                 response = stringBuilder.toString();
 
-                // Close resources
                 inputStream.close();
                 bufferedReader.close();
                 connection.disconnect();
@@ -259,25 +252,22 @@ public class PlanTripSearch extends AppCompatActivity implements ListAdapter.OnD
 
         @Override
         protected void onPostExecute(String result) {
-            // Process the search results
             if (result != null) {
                 processSearchResults(result);
             } else {
-                // Handle error case
                 handleSearchError();
             }
         }
     }
+
+    // Handle the search results
     private void processSearchResults(String json) {
         try {
-            // Parse the JSON response
             JSONObject response = new JSONObject(json);
             JSONArray elements = response.getJSONArray("elements");
 
-            // Clear existing search results
             searchResults.clear();
 
-            // Process each search result
             for (int i = 0; i < elements.length(); i++) {
                 JSONObject element = elements.getJSONObject(i);
                 JSONObject tags = element.getJSONObject("tags");
@@ -288,38 +278,33 @@ public class PlanTripSearch extends AppCompatActivity implements ListAdapter.OnD
                     latitude = element.getDouble("lat");
                     longitude = element.getDouble("lon");
                 } else {
-                    latitude = 0; // Default latitude
-                    longitude = 0; // Default longitude
+                    latitude = 0;
+                    longitude = 0;
                 }
                 place = new Place(latitude, longitude, name);
-                // Add the name to the search results list
                 searchResults.add(place);
             }
 
-            // Notify the adapter that the data set has changed
             searchResultAdapter.notifyDataSetChanged();
             loadingProgressBar.setVisibility(View.INVISIBLE);
             noEntriesText.setText("");
-            // Update UI if no search results found
             if (searchResults.isEmpty()) {
                 noEntriesText.setText("Įrašų nėra");
                 loadingProgressBar.setVisibility(View.INVISIBLE);
             }
         } catch (JSONException e) {
             e.printStackTrace();
-            // Handle JSON parsing error
             handleSearchError();
         }
     }
 
-
+    // Method to inform user about error
     private void handleSearchError() {
-        // Hide progress bar
         loadingProgressBar.setVisibility(View.INVISIBLE);
-        // Show appropriate error message
-        noEntriesText.setText("Error occurred while fetching data");
+        noEntriesText.setText("Kažkas nutiko ne taip. Bandyk dar kartą");
     }
 
+    // Method to handle systems "back" button press
     @Override
     public void onBackPressed() {
         new AlertDialog.Builder(this)

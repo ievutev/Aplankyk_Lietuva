@@ -1,11 +1,14 @@
 package aplankyk.lietuva;
 
+import static java.security.AccessController.getContext;
+
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -23,26 +26,20 @@ import java.util.List;
 
 public class GalleryActivity extends AppCompatActivity {
 
-    private static final String TAG = "GalleryActivity";
-
     private List<String> imageUrls = new ArrayList<>();
-
     private int currentIndex = 0;
+    private Toast loadingToast;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
-
         String albumName = getIntent().getStringExtra("albumName");
-
-        // Fetch images from Firebase Storage
         fetchImagesFromStorage(albumName);
-
-        // Enable buttons and set click listeners
         enableButtons();
     }
 
+    // Method to fetch images from the store by album name
     private void fetchImagesFromStorage(String albumName) {
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
@@ -56,19 +53,14 @@ public class GalleryActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(ListResult listResult) {
                             for (StorageReference item : listResult.getItems()) {
-                                // Get download URL for each image and add it to the list
                                 item.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                                     @Override
                                     public void onSuccess(Uri uri) {
                                         imageUrls.add(uri.toString());
-                                        Log.d(TAG, "Image URL: " + uri.toString());
 
-                                        // Check if all images are loaded
                                         if (imageUrls.size() == listResult.getItems().size()) {
-                                            // Enable buttons after images are loaded
                                             enableButtons();
 
-                                            // Load first image only if the list is not empty
                                             if (!imageUrls.isEmpty()) {
                                                 loadImageAtIndex(currentIndex);
                                             }
@@ -77,7 +69,8 @@ public class GalleryActivity extends AppCompatActivity {
                                 }).addOnFailureListener(new OnFailureListener() {
                                     @Override
                                     public void onFailure(Exception e) {
-                                        Log.e(TAG, "Error getting download URL", e);
+                                        loadingToast = Toast.makeText(GalleryActivity.this, "Kažkas nutiko ne taip... Bandyk dar kartą.", Toast.LENGTH_SHORT);
+                                        loadingToast.show();
                                     }
                                 });
                             }
@@ -88,12 +81,14 @@ public class GalleryActivity extends AppCompatActivity {
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(Exception e) {
-                            Log.e(TAG, "Error fetching images", e);
+                            loadingToast = Toast.makeText(GalleryActivity.this, "Kažkas nutiko ne taip... Bandyk dar kartą.", Toast.LENGTH_SHORT);
+                            loadingToast.show();
                         }
                     });
         }
     }
 
+    // Method to enable buttons to navigate the photos
     private void enableButtons() {
         ImageButton prevButton = findViewById(R.id.prevButton);
         ImageButton nextButton = findViewById(R.id.nextButton);
@@ -116,6 +111,7 @@ public class GalleryActivity extends AppCompatActivity {
         });
     }
 
+    // Method to load previous image
     private void loadPreviousImage() {
         if (currentIndex > 0) {
             currentIndex--;
@@ -123,6 +119,7 @@ public class GalleryActivity extends AppCompatActivity {
         }
     }
 
+    // Method to load next image
     private void loadNextImage() {
         if (currentIndex < imageUrls.size() - 1) {
             currentIndex++;
@@ -130,6 +127,7 @@ public class GalleryActivity extends AppCompatActivity {
         }
     }
 
+    // Method to load image at specific index
     private void loadImageAtIndex(int index) {
         String imageUrl = imageUrls.get(index);
         ImageView image = findViewById(R.id.photoImageView);

@@ -67,6 +67,7 @@ public class PlanTripCards extends AppCompatActivity {
         cardsButton.setBackgroundColor(Color.parseColor("#F6F6EB"));
         ImageView likedPlacesButton = findViewById(R.id.liked);
 
+        // Menu buttons click actions
         overridePendingTransition(0, 0);
         likedPlacesButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -222,8 +223,8 @@ public class PlanTripCards extends AppCompatActivity {
 
     }
 
+    // Random location name generator
     private void getRandomLocationName() {
-        // Construct the Overpass API query to get all nodes with the tourism tag
         String overpassQuery = "[out:json];\n" +
                 "(node[tourism](around: 90000, 55.1694,23.8813););\n" +
                 "out;";
@@ -232,35 +233,26 @@ public class PlanTripCards extends AppCompatActivity {
         loadingProgressBar.setVisibility(View.VISIBLE);
 
         try {
-            // Encode the query string
             String encodedQuery = URLEncoder.encode(overpassQuery, "UTF-8");
             String apiUrl = "https://overpass-api.de/api/interpreter?data=" + encodedQuery;
 
-            // Execute the HTTP request to fetch all nodes meeting the criteria
             new HttpRequestTask().execute(apiUrl);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
     }
 
-
+    // Method to create HTTP request and handle it
     private class HttpRequestTask extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... urls) {
             String response = "";
             HttpURLConnection connection = null;
             try {
-                // Create URL object from the API URL string
                 URL url = new URL(urls[0]);
-                // Open connection
                 connection = (HttpURLConnection) url.openConnection();
-                // Set request method
                 connection.setRequestMethod("GET");
-                // Connect to the API
                 connection.connect();
-                // Read input stream into a String
-                // Handle response...
-                // Read input stream into a String
                 InputStream inputStream = connection.getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 String line;
@@ -270,14 +262,12 @@ public class PlanTripCards extends AppCompatActivity {
                 }
                 response = stringBuilder.toString();
 
-                // Close resources
                 inputStream.close();
                 bufferedReader.close();
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
                 if (connection != null) {
-                    // Disconnect the connection
                     connection.disconnect();
                 }
             }
@@ -286,11 +276,9 @@ public class PlanTripCards extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String result) {
-            // Parse the JSON response and extract a random location name
 
             String locationName = parseRandomLocationNameFromJson(result);
 
-            // Populate the UI with the random location name
             if (locationName != "") {
                 TextView placeNameTextView = findViewById(R.id.placeName);
                 placeNameTextView.setText(locationName);
@@ -307,13 +295,12 @@ public class PlanTripCards extends AppCompatActivity {
         }
     }
 
+    // Method to get the random location
     private String parseRandomLocationNameFromJson(String json) {
         try {
-            // Parse the JSON response
             JSONObject response = new JSONObject(json);
             JSONArray elements = response.getJSONArray("elements");
 
-            // Check if elements array is not empty
             if (elements.length() > 0) {
                 Random random = new Random();
                 int attempt = 0;
@@ -321,27 +308,22 @@ public class PlanTripCards extends AppCompatActivity {
                 double longitude = 0;
                 String name = "";
                 while (attempt < elements.length()) {
-                    // Get a random element from the array
                     int randomIndex = random.nextInt(elements.length());
                     JSONObject element = elements.getJSONObject(randomIndex);
                     JSONObject tags = element.getJSONObject("tags");
 
-                    // Check if the element has name, latitude, and longitude tags
                     if (tags.has("name")) {
                         if (tags.has("lat") && tags.has("lon")) {
                             latitude = element.getDouble("lat");
                             longitude = element.getDouble("lon");
                             name = tags.getString("name");
 
-                            // Check if the coordinates are within Lithuania's bounds
                             if (isWithinLithuania(latitude, longitude)) {
-                                // Assign the 'place' variable here
                                 place = new Place(latitude, longitude, name);
                                 return name;
                             }
                         } else {
                             name = tags.getString("name");
-                            // Assign the 'place' variable here
                             place = new Place(latitude, longitude, name);
                             return name;
                         }
@@ -354,16 +336,13 @@ public class PlanTripCards extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        // Return default message if no valid location name is found
         return "";
     }
 
-
-    // Check if the coordinates are within Lithuania's bounds
+    // Method to check if the place is in Lithuania
     private boolean isWithinLithuania(double latitude, double longitude) {
         boolean result = false;
 
-        // Define the bounding boxes around Lithuania's borders
         if ((longitude > 21.116236 && longitude < 22.754387 && latitude > 55.181514 && latitude < 56.325199) ||
                 (longitude > 22.621825 && longitude < 26.293709 && latitude > 55.131299 && latitude < 56.037815) ||
                 (longitude > 22.896388 && longitude < 25.534867 && latitude > 54.370459 && latitude < 55.150137) ||
@@ -374,6 +353,7 @@ public class PlanTripCards extends AppCompatActivity {
         return result;
     }
 
+    // Method to handle system "back" button press
     @Override
     public void onBackPressed() {
         new AlertDialog.Builder(this)

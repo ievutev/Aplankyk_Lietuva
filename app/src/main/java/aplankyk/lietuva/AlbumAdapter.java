@@ -35,6 +35,7 @@ public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder> 
         return new ViewHolder(view);
     }
 
+    // This method handles the clicks
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") final int position) {
         String album = albums.get(position);
@@ -50,11 +51,14 @@ public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder> 
         });
     }
 
+    // This method returns the count of albums
     @Override
     public int getItemCount() {
         return albums.size();
     }
 
+
+    // This method names all the albums
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView albumTitleTextView;
 

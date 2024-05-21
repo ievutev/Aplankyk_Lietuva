@@ -45,10 +45,8 @@ public class LikedPlaces extends AppCompatActivity implements ListAdapter.OnDire
         pageName.setText("Išsaugotos vietos");
         findViewById(R.id.noEntriesTextView).setVisibility(View.INVISIBLE);
 
-        // Initialize Firestore
         db = FirebaseFirestore.getInstance();
 
-        // Initialize RecyclerView
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         likedPlacesList = new ArrayList<>();
@@ -58,7 +56,6 @@ public class LikedPlaces extends AppCompatActivity implements ListAdapter.OnDire
         adapter.setOnDirectionClickListener(this);
         adapter.setOnAboutObjectClickListener(this);
 
-        // Retrieve liked places data for the current user from Firestore
         retrieveLikedPlacesData();
 
         ImageView homeButton = findViewById(R.id.homeButton);
@@ -77,6 +74,7 @@ public class LikedPlaces extends AppCompatActivity implements ListAdapter.OnDire
         ImageView likedPlacesButton = findViewById(R.id.liked);
         likedPlacesButton.setBackgroundColor(Color.parseColor("#F6F6EB"));
 
+        // Methods used when buttons are clicked
         mapPlannerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -105,30 +103,24 @@ public class LikedPlaces extends AppCompatActivity implements ListAdapter.OnDire
 
         addToLikedPlaces = findViewById(R.id.addToList);
         if (addToLikedPlaces != null) {
-            addToLikedPlaces.setVisibility(View.VISIBLE); // Show the button
-        } else {
-            // Log an error or handle the situation where the button is not found
-            Log.e("LikedPlaces", "Button not found in layout");
+            addToLikedPlaces.setVisibility(View.VISIBLE);
         }
     }
 
+    // Method to retrieve liked places data
     private void retrieveLikedPlacesData() {
         // Get the current user's ID
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             String userId = currentUser.getUid();
 
-            // Query Firestore to retrieve the liked places data for the current user
             db.collection("Users").document(userId)
                     .get()
                     .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                         @Override
                         public void onSuccess(DocumentSnapshot documentSnapshot) {
-                            // Get the liked places data from the document snapshot
-                            // You may need to adjust this based on your database structure
                             List<Place> likedPlaces = documentSnapshot.toObject(User.class).getLikedPlaces();
 
-                            // Update the UI with the retrieved liked places data
                             if (likedPlaces != null) {
                                 likedPlacesList.clear();
                                 likedPlacesList.addAll(likedPlaces);
@@ -144,14 +136,13 @@ public class LikedPlaces extends AppCompatActivity implements ListAdapter.OnDire
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            // Handle any errors
+
                         }
                     });
         }
-
-
     }
 
+    // Method to close the app when system "back" button is pressed
     @Override
     public void onBackPressed() {
         new AlertDialog.Builder(this)
@@ -173,6 +164,7 @@ public class LikedPlaces extends AppCompatActivity implements ListAdapter.OnDire
                 .show();
     }
 
+    // Method to open Google Maps app when directions button is clicked
     @Override
     public void onDirectionClick(String placeName) {
         String uri = "https://www.google.com/maps/dir/?api=1&destination=" + placeName;
@@ -181,6 +173,7 @@ public class LikedPlaces extends AppCompatActivity implements ListAdapter.OnDire
         startActivity(intent);
     }
 
+    // Method to open Google search results when about button is clicked
     @Override
     public void onAboutObjectClick(String placeName) {
         Intent intent = new Intent(this, SearchResultWebActivity.class);

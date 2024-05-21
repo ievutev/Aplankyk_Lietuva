@@ -26,9 +26,7 @@ import java.util.List;
 
 public class AddAlbumDialog extends Dialog {
 
-    // Define variables
-    private static final int REQUEST_CODE_PICK_IMAGE = 102; // Define your request code here
-
+    private static final int REQUEST_CODE_PICK_IMAGE = 102;
     private EditText albumTitleEditText;
     private Button addPhotoButton;
     private TextView photoSelectedTextView;
@@ -39,20 +37,20 @@ public class AddAlbumDialog extends Dialog {
     private AddAlbumDialogListener listener;
     private Activity activity;
     private List<Uri> selectedImageUris;
-    private int requestCode;
     private AlbumAddedListener albumAddedListener;
     private Toast loadingToast;
 
     public AddAlbumDialog(@NonNull Activity activity, int width, int height) {
         super(activity);
-        this.activity = activity; // Store the activity reference
+        this.activity = activity;
         this.dialogWidth = width;
         this.dialogHeight = height;
-        this.listener = (AddAlbumDialogListener) activity; // Initialize the listener
+        this.listener = (AddAlbumDialogListener) activity;
     }
 
-    // Define the interface for communication
     public interface AddAlbumDialogListener {
+
+        // Method to count the selected images
         void onPhotosSelected(List<Uri> selectedImageUris);
     }
 
@@ -63,13 +61,14 @@ public class AddAlbumDialog extends Dialog {
         setContentView(R.layout.add_album_dialog);
         getWindow().setLayout(dialogWidth, dialogHeight);
 
-        // Initialize views
+        // Initializing views
         albumTitleEditText = findViewById(R.id.albumTitleEditText);
         cancelButton = findViewById(R.id.cancelButton);
         saveButton = findViewById(R.id.saveButton);
         addPhotoButton = findViewById(R.id.addPhotoButton);
         photoSelectedTextView = findViewById(R.id.photoSelectedTextView);
 
+        // Click listeners
         addPhotoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -80,40 +79,34 @@ public class AddAlbumDialog extends Dialog {
             }
         });
 
-        // Set click listeners
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dismiss(); // Close the dialog when cancel button is clicked
+                dismiss();
             }
         });
 
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Get the album title from the EditText
                 String albumTitle = albumTitleEditText.getText().toString();
 
-                // Check if album title is empty
                 if (albumTitle.isEmpty()) {
-                    Toast.makeText(getContext(), "Please enter album title", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Įveskite albumo pavadinimą", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                // Check if photos are selected
                 if (selectedImageUris == null || selectedImageUris.isEmpty()) {
-                    Toast.makeText(getContext(), "Please select photos", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Pasirinkite bent vieną nuotrauką", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-
-                // Upload photos to Firebase Storage (implement this part in your activity)
                 uploadPhotosToStorage(albumTitle);
 
                 loadingToast = Toast.makeText(getContext(), "Albumas sukurtas, sąrašas atsinaujins netrukus", Toast.LENGTH_SHORT);
                 loadingToast.show();
 
-                dismiss(); // Close the dialog
+                dismiss();
 
                 if (albumAddedListener != null) {
                     albumAddedListener.onAlbumAdded();
@@ -125,7 +118,7 @@ public class AddAlbumDialog extends Dialog {
 
     }
 
-    // Method to set selected image URIs
+    // Method to inform user about selected photos
     public void setSelectedImageUris(List<Uri> selectedImageUris) {
         this.selectedImageUris = selectedImageUris;
         if (selectedImageUris != null && !selectedImageUris.isEmpty()) {
@@ -133,7 +126,7 @@ public class AddAlbumDialog extends Dialog {
         }
     }
 
-    // Method to upload photos to Firebase Storage
+    // Method to upload selected photos to storage
     private void uploadPhotosToStorage(String albumTitle) {
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference storageRef = storage.getReference();
@@ -151,20 +144,21 @@ public class AddAlbumDialog extends Dialog {
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                             // Photo uploaded successfully
                             if (albumAddedListener != null) {
-                                albumAddedListener.onAlbumAdded(); // Notify the listener
+                                albumAddedListener.onAlbumAdded();
                             }
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            // Handle upload failure
+                            loadingToast = Toast.makeText(getContext(), "Kažkas nutiko ne taip... Bandyk dar kartą.", Toast.LENGTH_SHORT);
+                            loadingToast.show();
                         }
                     });
         }
     }
 
-    // Method to handle the result of image selection
+    // Method to count the selected images
     public void handleImageSelectionResult(Intent data) {
         if (data != null) {
             List<Uri> selectedImageUris = new ArrayList<>();
@@ -184,8 +178,6 @@ public class AddAlbumDialog extends Dialog {
     public interface AlbumAddedListener {
         void onAlbumAdded();
     }
-
-
 
     public void setAlbumAddedListener(AlbumAddedListener listener) {
         this.albumAddedListener = listener;

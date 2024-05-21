@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -34,7 +35,6 @@ public class PhotoAlbum extends AppCompatActivity implements AddAlbumDialog.AddA
     private List<String> albumList;
     private  AddAlbumDialog addAlbumDialog;
     public static final int REQUEST_CODE_PICK_IMAGE = 102;
-
     private boolean albumsFetched = false;
 
     @Override
@@ -45,7 +45,6 @@ public class PhotoAlbum extends AppCompatActivity implements AddAlbumDialog.AddA
         TextView pageName = findViewById(R.id.pagename);
         pageName.setText("Nuotraukų albumas");
 
-        // Initialize RecyclerView and adapter
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         albumList = new ArrayList<>();
@@ -63,7 +62,6 @@ public class PhotoAlbum extends AppCompatActivity implements AddAlbumDialog.AddA
             }
         });
 
-        // Fetch albums from Firebase Storage
         fetchAlbumsFromStorage();
 
         ImageView homeButton = findViewById(R.id.homeButton);
@@ -102,12 +100,15 @@ public class PhotoAlbum extends AppCompatActivity implements AddAlbumDialog.AddA
             }
         });
     }
+
+    // Method to open the gallery
     private void openGallery(String selectedAlbum) {
         Intent intent = new Intent(PhotoAlbum.this, GalleryActivity.class);
         intent.putExtra("albumName", selectedAlbum);
         startActivity(intent);
     }
 
+    // Method to fetch albums from storage
     private void fetchAlbumsFromStorage() {
         if (!albumsFetched) {
             FirebaseAuth mAuth = FirebaseAuth.getInstance();
@@ -117,33 +118,34 @@ public class PhotoAlbum extends AppCompatActivity implements AddAlbumDialog.AddA
                 FirebaseStorage storage = FirebaseStorage.getInstance();
                 StorageReference listRef = storage.getReference().child("users/" + userId);
                 fetchItems(listRef);
-                albumsFetched = true; // Set the flag to true after fetching albums
+                albumsFetched = true;
             }
         }
     }
 
+    // Method to fetch photos
     private void fetchItems(final StorageReference reference) {
         reference.listAll()
                 .addOnSuccessListener(new OnSuccessListener<ListResult>() {
                     @Override
                     public void onSuccess(ListResult listResult) {
-                        albumList.clear(); // Clear the existing album list
+                        albumList.clear();
                         for (StorageReference prefix : listResult.getPrefixes()) {
                             String folderName = prefix.getName();
                             albumList.add(folderName);
                         }
-                        adapter.notifyDataSetChanged(); // Notify adapter of dataset change
+                        adapter.notifyDataSetChanged();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(Exception e) {
-                        System.out.println("Error: " + e.getMessage());
+                        Toast.makeText(PhotoAlbum.this, "Kažkas nutiko ne taip. Bandyk dar kartą", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
 
-
+    // Method to count the selected images
     @Override
     public void onPhotosSelected(List<Uri> selectedImageUris) {
         if (addAlbumDialog != null) {
@@ -151,6 +153,7 @@ public class PhotoAlbum extends AppCompatActivity implements AddAlbumDialog.AddA
         }
     }
 
+    // Method to handle systems "back" button press
     @Override
     public void onBackPressed() {
         new AlertDialog.Builder(this)
@@ -182,14 +185,14 @@ public class PhotoAlbum extends AppCompatActivity implements AddAlbumDialog.AddA
         }
     }
 
+    // Method to refresh the activity when album was added
     @Override
     public void onAlbumAdded() {
-        // Fetch albums from Firebase Storage after a new album has been added
         fetchAlbumsFromStorage();
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                recreate(); // Recreate the PhotoAlbum activity
+                recreate();
             }
         }, 4000);
     }

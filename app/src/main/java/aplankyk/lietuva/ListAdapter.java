@@ -19,7 +19,6 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     private OnDirectionClickListener directionClickListener;
     private OnAboutObjectClickListener aboutObjectClickListener;
     private OnAddToListClickListener addToListClickListener;
-
     private boolean hideButtonInLikedPlaces;
 
     public ListAdapter(Context context, List<Place> searchResults, boolean hideButtonInLikedPlaces) {
@@ -59,6 +58,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         return new ViewHolder(view);
     }
 
+    // Method to execute tasks when buttons are clicked
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Place searchResult = searchResults.get(position);
@@ -70,14 +70,14 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
             holder.addToListButton.setVisibility(View.VISIBLE); // Show the button
         }
 
-        // Set click listener for the "Directions" button
+        // When the "Directions" button is clicked
         holder.directionsButton.setOnClickListener(v -> {
             if (directionClickListener != null) {
                 directionClickListener.onDirectionClick(searchResult.getTitle());
             }
         });
 
-        // Set click listener for the "About Object" button
+        // When the "About Object" button is clicked
         holder.aboutObjectButton.setOnClickListener(v -> {
             if (aboutObjectClickListener != null) {
                 aboutObjectClickListener.onAboutObjectClick(searchResult.getTitle());
@@ -92,6 +92,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         });
     }
 
+    // Method to return the size of results
     @Override
     public int getItemCount() {
         return searchResults.size();

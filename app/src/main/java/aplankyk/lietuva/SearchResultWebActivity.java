@@ -15,7 +15,7 @@ public class SearchResultWebActivity extends AppCompatActivity {
         setContentView(R.layout.activity_search_result_web);
 
         webView = findViewById(R.id.webView);
-        webView.getSettings().setJavaScriptEnabled(true); // Enable JavaScript if needed
+        webView.getSettings().setJavaScriptEnabled(true);
 
         String placeName = getIntent().getStringExtra("placeName");
         String url = "https://www.google.com/search?q=Lankytina vieta " + placeName;
