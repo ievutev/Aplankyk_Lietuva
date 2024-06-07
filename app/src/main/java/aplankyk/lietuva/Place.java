@@ -44,6 +44,7 @@ public class Place implements ClusterItem {
         return title;
     }
 
+
     @Override
     public String getSnippet() {
         return snippet;

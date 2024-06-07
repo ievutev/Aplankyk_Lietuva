@@ -1,10 +1,12 @@
 package aplankyk.lietuva;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -33,7 +35,7 @@ public class PhotoAlbum extends AppCompatActivity implements AddAlbumDialog.AddA
     private RecyclerView recyclerView;
     private AlbumAdapter adapter;
     private List<String> albumList;
-    private  AddAlbumDialog addAlbumDialog;
+    private AddAlbumDialog addAlbumDialog;
     public static final int REQUEST_CODE_PICK_IMAGE = 102;
     private boolean albumsFetched = false;
 
@@ -55,9 +57,8 @@ public class PhotoAlbum extends AppCompatActivity implements AddAlbumDialog.AddA
         addAlbumButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Create and show the dialog using the context of the current activity
                 addAlbumDialog = new AddAlbumDialog(PhotoAlbum.this, 900, 900);
-                addAlbumDialog.setAlbumAddedListener(PhotoAlbum.this); // Set the listener
+                addAlbumDialog.setAlbumAddedListener(PhotoAlbum.this);
                 addAlbumDialog.show();
             }
         });
@@ -99,31 +100,32 @@ public class PhotoAlbum extends AppCompatActivity implements AddAlbumDialog.AddA
                 openGallery(selectedAlbum);
             }
         });
+
+        if (!isNetworkConnected()) {
+            Toast.makeText(this, "Nėra interneto ryšio", Toast.LENGTH_SHORT).show();
+            addAlbumButton.setEnabled(false);
+        } else {
+            addAlbumButton.setEnabled(true);
+        }
     }
 
-    // Method to open the gallery
     private void openGallery(String selectedAlbum) {
         Intent intent = new Intent(PhotoAlbum.this, GalleryActivity.class);
         intent.putExtra("albumName", selectedAlbum);
         startActivity(intent);
     }
 
-    // Method to fetch albums from storage
     private void fetchAlbumsFromStorage() {
-        if (!albumsFetched) {
-            FirebaseAuth mAuth = FirebaseAuth.getInstance();
-            FirebaseUser currentUser = mAuth.getCurrentUser();
-            if (currentUser != null) {
-                String userId = currentUser.getUid();
-                FirebaseStorage storage = FirebaseStorage.getInstance();
-                StorageReference listRef = storage.getReference().child("users/" + userId);
-                fetchItems(listRef);
-                albumsFetched = true;
-            }
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            String userId = currentUser.getUid();
+            FirebaseStorage storage = FirebaseStorage.getInstance();
+            StorageReference listRef = storage.getReference().child("users/" + userId);
+            fetchItems(listRef);
         }
     }
 
-    // Method to fetch photos
     private void fetchItems(final StorageReference reference) {
         reference.listAll()
                 .addOnSuccessListener(new OnSuccessListener<ListResult>() {
@@ -145,7 +147,6 @@ public class PhotoAlbum extends AppCompatActivity implements AddAlbumDialog.AddA
                 });
     }
 
-    // Method to count the selected images
     @Override
     public void onPhotosSelected(List<Uri> selectedImageUris) {
         if (addAlbumDialog != null) {
@@ -153,7 +154,6 @@ public class PhotoAlbum extends AppCompatActivity implements AddAlbumDialog.AddA
         }
     }
 
-    // Method to handle systems "back" button press
     @Override
     public void onBackPressed() {
         new AlertDialog.Builder(this)
@@ -185,15 +185,15 @@ public class PhotoAlbum extends AppCompatActivity implements AddAlbumDialog.AddA
         }
     }
 
-    // Method to refresh the activity when album was added
     @Override
     public void onAlbumAdded() {
         fetchAlbumsFromStorage();
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                recreate();
-            }
-        }, 4000);
+        adapter.notifyDataSetChanged();
+    }
+
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 }

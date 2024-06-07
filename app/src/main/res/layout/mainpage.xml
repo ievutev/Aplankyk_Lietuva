@@ -68,7 +68,8 @@
                     android:fontFamily="@font/noto"
                     android:text=""
                     android:textColor="@android:color/black"
-                    android:textSize="48sp" />
+                    android:textSize="48sp"
+                    app:autoSizeMaxTextSize="48sp" />
 
                 <TextView
                     android:id="@+id/city"
@@ -77,7 +78,8 @@
                     android:fontFamily="@font/noto"
                     android:text=""
                     android:textColor="@android:color/black"
-                    android:textSize="28sp" />
+                    android:textSize="28sp"
+                    app:autoSizeMaxTextSize="28sp" />
 
             </LinearLayout>
 

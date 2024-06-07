@@ -2,9 +2,12 @@ package aplankyk.lietuva;
 
 import static android.content.ContentValues.TAG;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -221,6 +224,11 @@ public class PlanTripCards extends AppCompatActivity {
             }
         });
 
+        // Check network connectivity
+        if (!isNetworkConnected()) {
+            Toast.makeText(this, "Nėra interneto ryšio", Toast.LENGTH_SHORT).show();
+        }
+
     }
 
     // Random location name generator
@@ -373,5 +381,12 @@ public class PlanTripCards extends AppCompatActivity {
                 })
                 .setCancelable(false)
                 .show();
+    }
+
+    // Checking if network is connected
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 }

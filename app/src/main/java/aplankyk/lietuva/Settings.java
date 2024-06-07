@@ -1,7 +1,10 @@
 package aplankyk.lietuva;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.View;
@@ -125,6 +128,18 @@ public class Settings extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        // Check network connectivity
+        if (!isNetworkConnected()) {
+            Toast.makeText(this, "Nėra interneto ryšio", Toast.LENGTH_SHORT).show();
+            logOutButton.setEnabled(false);
+            deleteButton.setEnabled(false);
+        }
+        else {
+            logOutButton.setEnabled(true);
+            deleteButton.setEnabled(true);
+        }
+
     }
 
     // Method to show the dialog window with about info
@@ -194,7 +209,7 @@ public class Settings extends AppCompatActivity {
                                     photoRef.delete().addOnFailureListener(new OnFailureListener() {
                                         @Override
                                         public void onFailure(@NonNull Exception e) {
-                                            Toast.makeText(Settings.this, "Kažkas nutiko ne taip", Toast.LENGTH_SHORT).show();
+                                            //Toast.makeText(Settings.this, "Kažkas nutiko ne taip2", Toast.LENGTH_SHORT).show();
                                         }
                                     });
                                 }
@@ -202,7 +217,7 @@ public class Settings extends AppCompatActivity {
                         }).addOnFailureListener(new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                Toast.makeText(Settings.this, "Kažkas nutiko ne taip", Toast.LENGTH_SHORT).show();
+                                //Toast.makeText(Settings.this, "Kažkas nutiko ne taip3", Toast.LENGTH_SHORT).show();
                             }
                         });
                     }
@@ -210,7 +225,7 @@ public class Settings extends AppCompatActivity {
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    Toast.makeText(Settings.this, "Kažkas nutiko ne taip", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(Settings.this, "Kažkas nutiko ne taip", Toast.LENGTH_SHORT).show();
                 }
             });
 
@@ -218,17 +233,16 @@ public class Settings extends AppCompatActivity {
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
                     if (task.isSuccessful()) {
+                        FirebaseAuth.getInstance().signOut(); // Sign out the user
                         Intent intent = new Intent(Settings.this, LogIn.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
+                        finish(); // Finish current activity
                     } else {
-                        Intent intent = new Intent(Settings.this, LogIn.class);
-                        startActivity(intent);
+                        Toast.makeText(Settings.this, "Failed to delete account", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
-        } else {
-            Intent intent = new Intent(Settings.this, LogIn.class);
-            startActivity(intent);
         }
     }
 
@@ -242,14 +256,13 @@ public class Settings extends AppCompatActivity {
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
-                            Intent intent = new Intent(Settings.this, LogIn.class);
-                            startActivity(intent);
+
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(Settings.this, "Kažkas nutiko ne taip", Toast.LENGTH_SHORT).show();
+                            //Toast.makeText(Settings.this, "Kažkas nutiko ne taip", Toast.LENGTH_SHORT).show();
                         }
                     });
         }
@@ -275,5 +288,12 @@ public class Settings extends AppCompatActivity {
                 })
                 .setCancelable(false)
                 .show();
+    }
+
+    // Checking if network is connected
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 }

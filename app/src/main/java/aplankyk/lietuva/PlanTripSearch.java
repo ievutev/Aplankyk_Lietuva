@@ -2,9 +2,12 @@ package aplankyk.lietuva;
 
 import static android.content.ContentValues.TAG;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -145,6 +148,11 @@ public class PlanTripSearch extends AppCompatActivity implements ListAdapter.OnD
         searchResultAdapter.setOnDirectionClickListener(this);
         searchResultAdapter.setOnAboutObjectClickListener(this);
         searchResultAdapter.setOnAddToListClickListener(this);
+
+        // Check network connectivity
+        if (!isNetworkConnected()) {
+            Toast.makeText(this, "Nėra interneto ryšio", Toast.LENGTH_SHORT).show();
+        }
     }
 
     // Method for button "directions" click
@@ -204,8 +212,6 @@ public class PlanTripSearch extends AppCompatActivity implements ListAdapter.OnD
         String overpassQuery = "[out:json];" +
                 "(" +
                 "node[\"name\"~\"" + query + "*\",i][tourism](" + minLat + "," + minLon + "," + maxLat + "," + maxLon + ");" +
-                "way[\"name\"~\"" + query + "*\",i][tourism](" + minLat + "," + minLon + "," + maxLat + "," + maxLon + ");" +
-                "relation[\"name\"~\"" + query + "*\",i][tourism](" + minLat + "," + minLon + "," + maxLat + "," + maxLon + ");" +
                 ");" +
                 "out;";
 
@@ -324,5 +330,12 @@ public class PlanTripSearch extends AppCompatActivity implements ListAdapter.OnD
                 })
                 .setCancelable(false)
                 .show();
+    }
+
+    // Checking if network is connected
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 }

@@ -1,7 +1,10 @@
 package aplankyk.lietuva;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -59,6 +62,8 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
     private Place place;
     View overlay;
 
+    private FetchPlacesTask fetchPlacesTask;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,12 +71,18 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
         ImageView mapButton = findViewById(R.id.map);
         mapButton.setBackgroundColor(Color.parseColor("#F6F6EB"));
 
-        mapView = findViewById(R.id.mapView);
-        mapView.onCreate(savedInstanceState);
-        mapView.getMapAsync(this);
+        // Check network connectivity
+        if (!isNetworkConnected()) {
+            Toast.makeText(this, "Nėra interneto ryšio", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            mapView = findViewById(R.id.mapView);
+            mapView.onCreate(savedInstanceState);
+            mapView.getMapAsync(this);
 
-        initializeViews();
-        setupListeners();
+            initializeViews();
+            setupListeners();
+        }
     }
 
     // Method for initializing views
@@ -154,7 +165,8 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
         Toast.makeText(PlanTripMap.this, "Žemėlapio duomenys kraunami. Tai gali užtrukti.", Toast.LENGTH_SHORT).show();
 
         new Handler().postDelayed(() -> {
-            new FetchPlacesTask(this).execute();
+            fetchPlacesTask = new FetchPlacesTask(this);
+            fetchPlacesTask.execute();
         }, 10);
     }
 
@@ -169,6 +181,9 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
         protected String doInBackground(Void... voids) {
             PlanTripMap activity = activityReference.get();
             if (activity == null || activity.isFinishing()) return null;
+
+            if (isCancelled()) return null;  // Check if the task is cancelled
+
             return activity.fetchDataFromOpenStreetMapAPI();
         }
 
@@ -176,10 +191,18 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
         protected void onPostExecute(String placesJson) {
             PlanTripMap activity = activityReference.get();
             if (activity == null || activity.isFinishing()) return;
-            if (placesJson != null) {
+
+            if (!isCancelled() && placesJson != null) {  // Check if the task is cancelled
                 activity.processPlacesJson(placesJson);
             } else {
                 Toast.makeText(activity, "Kažkas nutiko ne taip. Bandyk dar kartą", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            PlanTripMap activity = activityReference.get();
+            if (activity != null && !activity.isFinishing()) {
             }
         }
     }
@@ -279,6 +302,7 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
         return ((longitude > 21.116236 && longitude < 22.754387 && latitude > 55.181514 && latitude < 56.325199) ||
                 (longitude > 22.621825 && longitude < 26.293709 && latitude > 55.131299 && latitude < 56.037815) ||
                 (longitude > 22.896388 && longitude < 25.534867 && latitude > 54.370459 && latitude < 55.150137) ||
+                (longitude > 22.851318 && longitude < 24.889282 && latitude > 55.880492 && latitude < 55.960617) ||
                 (longitude > 23.512033 && longitude < 24.842267 && latitude > 53.965276 && latitude < 54.752666));
     }
 
@@ -324,6 +348,9 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
     protected void onPause() {
         super.onPause();
         mapView.onPause();
+        if (fetchPlacesTask != null) {
+            fetchPlacesTask.cancel(true);  // Cancel the AsyncTask
+        }
     }
 
     @Override
@@ -342,5 +369,12 @@ public class PlanTripMap extends AppCompatActivity implements OnMapReadyCallback
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         mapView.onSaveInstanceState(outState);
+    }
+
+    // Checking if network is connected
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 }

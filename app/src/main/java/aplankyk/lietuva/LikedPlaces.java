@@ -1,8 +1,11 @@
 package aplankyk.lietuva;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -11,6 +14,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -26,6 +30,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class LikedPlaces extends AppCompatActivity implements ListAdapter.OnDirectionClickListener,
         ListAdapter.OnAboutObjectClickListener {
@@ -105,6 +110,11 @@ public class LikedPlaces extends AppCompatActivity implements ListAdapter.OnDire
         if (addToLikedPlaces != null) {
             addToLikedPlaces.setVisibility(View.VISIBLE);
         }
+
+        // Check network connectivity
+        if (!isNetworkConnected()) {
+            Toast.makeText(this, "Nėra interneto ryšio", Toast.LENGTH_SHORT).show();
+        }
     }
 
     // Method to retrieve liked places data
@@ -119,9 +129,9 @@ public class LikedPlaces extends AppCompatActivity implements ListAdapter.OnDire
                     .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                         @Override
                         public void onSuccess(DocumentSnapshot documentSnapshot) {
-                            List<Place> likedPlaces = documentSnapshot.toObject(User.class).getLikedPlaces();
 
-                            if (likedPlaces != null) {
+                            if (Objects.requireNonNull(documentSnapshot.toObject(User.class)).getLikedPlaces() != null) {
+                                List<Place> likedPlaces = Objects.requireNonNull(documentSnapshot.toObject(User.class)).getLikedPlaces();
                                 likedPlacesList.clear();
                                 likedPlacesList.addAll(likedPlaces);
                                 adapter.notifyDataSetChanged();
@@ -130,6 +140,9 @@ public class LikedPlaces extends AppCompatActivity implements ListAdapter.OnDire
                                 } else {
                                     findViewById(R.id.noEntriesTextView).setVisibility(View.INVISIBLE);
                                 }
+                            }
+                            else {
+                                Toast.makeText(LikedPlaces.this, "Kažkas nutiko ne taip. Bandyk dar kartą", Toast.LENGTH_SHORT).show();
                             }
                         }
                     })
@@ -181,4 +194,10 @@ public class LikedPlaces extends AppCompatActivity implements ListAdapter.OnDire
         startActivity(intent);
     }
 
+    // Checking if network is connected
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
 }

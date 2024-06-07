@@ -16,3 +16,5 @@
 /signed_key.jks
 google-services.json
 signed_key.jks
+/upload_certificate.pem
+upload_certificate.pem

@@ -1,3 +1,7 @@
 /build
 /google-services.json
 google-services.json
+encryption_public_key.pem
+signed_key.jks
+pepk.jar
+output.zip

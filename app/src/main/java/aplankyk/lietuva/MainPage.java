@@ -175,6 +175,7 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
             } else {
                 Toast.makeText(this, "Nesuteikta vietovės prieiga", Toast.LENGTH_SHORT).show();
                 loadingProgressBar.setVisibility(View.INVISIBLE);
+                displayNearbyPlaces();
             }
         }
     }
@@ -222,7 +223,7 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
                     JSONObject weatherObject = weatherArray.getJSONObject(0);
                     String iconCode = weatherObject.getString("icon");
 
-                    String iconUrl = "https://openweathermap.org/img/wn/" + iconCode + "@2x.png";
+                    String iconUrl = "http://openweathermap.org/img/wn/" + iconCode + "@2x.png";
 
                     // Load the weather icon into the ImageView using Picasso
                     Picasso.get().load(iconUrl).into(weatherIcon, new com.squareup.picasso.Callback() {
@@ -234,6 +235,7 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
                         @Override
                         public void onError(Exception e) {
                             loadingProgressBar.setVisibility(View.INVISIBLE);
+                            System.out.println(e.getMessage());
                         }
                     });
 
@@ -305,6 +307,7 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
             } else {
                 Toast.makeText(this, "Reikalinga vietovės prieiga", Toast.LENGTH_SHORT).show();
                 loadingProgressBar.setVisibility(View.INVISIBLE);
+                displayNearbyPlaces();
             }
         }
     }
@@ -362,11 +365,11 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
 
     // Method to fetch nearby places using api
     private void fetchNearbyPlacesFromApi(double latitude, double longitude) throws UnsupportedEncodingException {
-        String overpassQuery = "node['tourism'](around:15000," + latitude + "," + longitude + ");" +
-                "way['tourism'](around:15000," + latitude + "," + longitude + ");" +
-                "relation['tourism'](around:15000," + latitude + "," + longitude;
+        String overpassQuery = "node['tourism'](around:10000," + latitude + "," + longitude;
         String encodedQuery = URLEncoder.encode(overpassQuery, "UTF-8");
         String apiUrl = "https://overpass-api.de/api/interpreter?data=[out:json];" + encodedQuery + ");out;";
+
+        System.out.println(apiUrl);
 
         RequestQueue queue = Volley.newRequestQueue(this);
 
@@ -392,9 +395,12 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
                                     longitude = 0;
                                 }
 
-                                Place place = new Place(latitude, longitude, placeName); // Declare place locally
                                 if (!placeName.isEmpty()) {
-                                    nearbyPlaces.add(place);
+                                    if(placeName.length()>10) {
+                                        Place place = new Place(latitude, longitude, placeName);
+                                        nearbyPlaces.add(place);
+                                    }
+
                                 }
 
                             }
