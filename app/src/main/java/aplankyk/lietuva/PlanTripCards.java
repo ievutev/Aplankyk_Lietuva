@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -55,6 +56,7 @@ public class PlanTripCards extends AppCompatActivity {
     Place place;
     CardView place_info;
     View overlay;
+    LinearLayout buttons;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +71,8 @@ public class PlanTripCards extends AppCompatActivity {
         ImageView cardsButton = findViewById(R.id.card);
         cardsButton.setBackgroundColor(Color.parseColor("#F6F6EB"));
         ImageView likedPlacesButton = findViewById(R.id.liked);
+        buttons = findViewById(R.id.buttons);
+        buttons.setVisibility(View.INVISIBLE);
 
         // Menu buttons click actions
         overridePendingTransition(0, 0);
@@ -167,6 +171,7 @@ public class PlanTripCards extends AppCompatActivity {
             public void onClick(View v) {
                 place_info.setVisibility(View.INVISIBLE);
                 overlay.setVisibility(View.INVISIBLE);
+                buttons.setVisibility(View.INVISIBLE);
                 TextView placeNameTextView = findViewById(R.id.placeName);
                 placeNameTextView.setText("");
             }
@@ -290,6 +295,7 @@ public class PlanTripCards extends AppCompatActivity {
             if (locationName != "") {
                 TextView placeNameTextView = findViewById(R.id.placeName);
                 placeNameTextView.setText(locationName);
+                buttons.setVisibility(View.VISIBLE);
             }
 
             else {

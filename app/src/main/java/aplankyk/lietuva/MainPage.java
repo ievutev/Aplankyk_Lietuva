@@ -78,6 +78,7 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
     private ProgressBar loadingProgressBar;
+    private ProgressBar progressBar;
     private RecyclerView recyclerView;
     private ListAdapter adapter;
     private static final int REQUEST_CHECK_SETTINGS = 1001;
@@ -98,37 +99,41 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
         loadingProgressBar = findViewById(R.id.loadingProgressBar);
         loadingProgressBar.setVisibility(View.VISIBLE);
 
+        progressBar = findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.VISIBLE);
+
         // Check network connectivity
         if (!isNetworkConnected()) {
             Toast.makeText(this, "Nėra interneto ryšio", Toast.LENGTH_SHORT).show();
             loadingProgressBar.setVisibility(View.INVISIBLE);
-        }
+            progressBar.setVisibility(View.INVISIBLE);
+        } else {
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+            // Requesting location
+            locationRequest = LocationRequest.create()
+                    .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                    .setInterval(2000)
+                    .setNumUpdates(2);
 
-        // Requesting location
-        locationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(2000)
-                .setNumUpdates(2);
-
-        locationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                if (locationResult == null) {
-                    return;
-                }
-                for (Location location : locationResult.getLocations()) {
-                    updateLocation(location, tempText, weatherIcon);
-                    try {
-                        fetchNearbyPlacesFromApi(location.getLatitude(), location.getLongitude());
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
+            locationCallback = new LocationCallback() {
+                @Override
+                public void onLocationResult(LocationResult locationResult) {
+                    if (locationResult == null) {
+                        return;
+                    }
+                    for (Location location : locationResult.getLocations()) {
+                        updateLocation(location, tempText, weatherIcon);
+                        try {
+                            fetchNearbyPlacesFromApi(location.getLatitude(), location.getLongitude());
+                        } catch (UnsupportedEncodingException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-            }
-        };
-        startLocationUpdates();
+            };
+            startLocationUpdates();
+        }
 
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -486,7 +491,9 @@ public class MainPage extends AppCompatActivity implements ListAdapter.OnDirecti
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(MainPage.this, "Kažkas nutiko ne taip. Bandyk dar kartą", Toast.LENGTH_SHORT).show();
+                    progressBar.setVisibility(View.INVISIBLE);
                 });
+        progressBar.setVisibility(View.INVISIBLE);
     }
 
 }

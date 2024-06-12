@@ -53,24 +53,27 @@ public class LogIn extends AppCompatActivity {
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(LogIn.this, GoogleSignInOptions.DEFAULT_SIGN_IN);
-                googleSignInClient.signOut();
-                Intent signInIntent = client.getSignInIntent();
-                startActivityForResult(signInIntent, 1234);
+                if (isNetworkConnected()) {
+                    GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(LogIn.this, GoogleSignInOptions.DEFAULT_SIGN_IN);
+                    googleSignInClient.signOut();
+                    Intent signInIntent = client.getSignInIntent();
+                    startActivityForResult(signInIntent, 1234);
+                } else {
+                    Toast.makeText(LogIn.this, "Nėra interneto ryšio", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
-        // Check network connectivity
+        // Check network connectivity on activity creation
         if (!isNetworkConnected()) {
             Toast.makeText(this, "Nėra interneto ryšio", Toast.LENGTH_SHORT).show();
             loginButton.setEnabled(false);
-        }
-        else {
+        } else {
             loginButton.setEnabled(true);
+            checkUserLoginStatus();
         }
     }
 
-    // Method to handle system "back" button press
     @Override
     public void onBackPressed() {
         new AlertDialog.Builder(this)
@@ -92,7 +95,6 @@ public class LogIn extends AppCompatActivity {
                 .show();
     }
 
-    // This method checks if user is already registered
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -117,53 +119,13 @@ public class LogIn extends AppCompatActivity {
                                             if (task.isSuccessful()) {
                                                 DocumentSnapshot document = task.getResult();
                                                 if (!document.exists()) {
-                                                    // User doesn't exist, show AlertDialog
-                                                    AlertDialog.Builder builder = new AlertDialog.Builder(LogIn.this);
-                                                    builder.setMessage("Vartotojas nerastas. Ar norite sukurti paskyrą?");
-                                                    builder.setPositiveButton("Taip", new DialogInterface.OnClickListener() {
-                                                        @Override
-                                                        public void onClick(DialogInterface dialog, int which) {
-                                                            // New User is created and stored in database
-                                                            User newUser = new User(userID);
-                                                            db.collection("Users").document(userID)
-                                                                    .set(newUser)
-                                                                    .addOnSuccessListener(aVoid -> {
-                                                                        Toast.makeText(LogIn.this, "Naudotojas sėkmingai sukurtas", Toast.LENGTH_SHORT).show();
-                                                                    })
-                                                                    .addOnFailureListener(e -> {
-                                                                        //Toast.makeText(LogIn.this, "Kažkas nutiko ne taip. Bandyk dar kartą", Toast.LENGTH_SHORT).show();
-                                                                    });
-                                                            startActivity(new Intent(LogIn.this, MainPage.class));
-                                                        }
-                                                    });
-                                                    builder.setNegativeButton("Ne", new DialogInterface.OnClickListener() {
-                                                        @Override
-                                                        public void onClick(DialogInterface dialog, int which) {
-                                                            FirebaseAuth.getInstance().signOut();
-                                                            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                                                            if (user != null) {
-                                                                user.delete()
-                                                                        .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                                            @Override
-                                                                            public void onComplete(@android.support.annotation.NonNull Task<Void> task) {
-                                                                                if (task.isSuccessful()) {
-                                                                                    Intent intent = new Intent(LogIn.this, LogIn.class);
-                                                                                    startActivity(intent);
-                                                                                }
-                                                                            }
-                                                                        });
-                                                            }
-                                                            dialog.dismiss();
-                                                        }
-                                                    });
-                                                    AlertDialog alertDialog = builder.create();
-                                                    alertDialog.show();
+                                                    showUserNotFoundDialog(userID, user);
                                                 } else {
                                                     startActivity(new Intent(LogIn.this, MainPage.class));
                                                     finish();
                                                 }
                                             } else {
-                                                //Toast.makeText(LogIn.this, "Kažkas nutiko ne taip. Bandyk dar kartą", Toast.LENGTH_SHORT).show();
+                                                Toast.makeText(LogIn.this, "Kažkas nutiko ne taip. Bandyk dar kartą", Toast.LENGTH_SHORT).show();
                                             }
                                         }
                                     });
@@ -174,19 +136,13 @@ public class LogIn extends AppCompatActivity {
                         }
                     });
                 } catch (ApiException e) {
-                    //Toast.makeText(LogIn.this, "Kažkas nutiko ne taip. Bandyk dar kartą", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LogIn.this, "Kažkas nutiko ne taip. Bandyk dar kartą", Toast.LENGTH_SHORT).show();
                 }
             }
-            else {
-
-                }
-
         }
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
+    private void checkUserLoginStatus() {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             FirebaseFirestore.getInstance().collection("Users").document(currentUser.getUid()).get().addOnCompleteListener(task -> {
@@ -194,17 +150,53 @@ public class LogIn extends AppCompatActivity {
                     startActivity(new Intent(this, MainPage.class));
                     finish();
                 } else {
-                    // User might have been deleted, ensure to sign them out
                     FirebaseAuth.getInstance().signOut();
                 }
             });
         }
     }
 
-    // Checking if network is connected
     private boolean isNetworkConnected() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
+
+    private void showUserNotFoundDialog(String userID, FirebaseUser user) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        AlertDialog.Builder builder = new AlertDialog.Builder(LogIn.this);
+        builder.setMessage("Vartotojas nerastas. Ar norite sukurti paskyrą?");
+        builder.setPositiveButton("Taip", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                User newUser = new User(userID);
+                db.collection("Users").document(userID)
+                        .set(newUser)
+                        .addOnSuccessListener(aVoid -> {
+                            Toast.makeText(LogIn.this, "Naudotojas sėkmingai sukurtas", Toast.LENGTH_SHORT).show();
+                        })
+                        .addOnFailureListener(e -> {
+                            Toast.makeText(LogIn.this, "Kažkas nutiko ne taip. Bandyk dar kartą", Toast.LENGTH_SHORT).show();
+                        });
+                startActivity(new Intent(LogIn.this, MainPage.class));
+            }
+        });
+        builder.setNegativeButton("Ne", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                FirebaseAuth.getInstance().signOut();
+                if (user != null) {
+                    user.delete().addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Intent intent = new Intent(LogIn.this, LogIn.class);
+                            startActivity(intent);
+                        }
+                    });
+                }
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
     }
 }
